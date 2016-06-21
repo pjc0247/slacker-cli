@@ -1,0 +1,72 @@
+cmd = ARGV[0]
+
+def exec cmd
+  ret = system cmd
+  raise RuntimeError.new if ret == false
+end
+
+def is_initialized
+  begin
+    File.read ".slacker"
+    return true
+  rescue
+    return false
+  end
+end
+def proj_name
+  return File.read ".slacker"
+end
+def proj_name= name
+  File.write ".slacker", name
+end
+
+def create_project name  
+  if is_initialized
+    puts "already initialized"
+    return;  
+  end
+
+  exec "git init"
+  
+  exec "heroku create #{name}"
+  exec "heroku git:remote -a #{name}"
+
+  exec "heroku buildpacks:set https://github.com/pjc0247/slacker_buildpack"
+end
+def remove_project
+  if is_initialized == false
+    puts "not initialized"
+    return;  
+  end
+  
+  exec "heroku destroy --confirm #{proj_name}"
+end
+
+def deploy_and_run
+  exec "git add -A"
+  exec "git commit -m \".\""
+  exec "git push heroku master"
+
+  exec "heroku run worker"
+end
+
+def set_token token
+  File.write "token", token
+end
+
+def stop
+  exec "heroku ps:stop worker"
+end
+
+case cmd
+  when "create"
+    create_project ARGV[1]
+  when "remove"
+    remove_project
+  when "token"
+    set_token ARGV[1]
+  when "run"
+    deploy_and_run
+  when "stop"
+    stop
+end
