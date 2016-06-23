@@ -40,6 +40,8 @@ def remove_project
   end
   
   exec "heroku destroy --confirm #{proj_name}"
+  
+  File.remove ".slacker"
 end
 
 def deploy_and_run
